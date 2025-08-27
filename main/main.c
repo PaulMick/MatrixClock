@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <esp_wifi.h>
+
+#include "secrets.h"
 
 void app_main(void) {
-    int i = 0;
+    extern char* wifi_ssid;
+
     while (1) {
-        printf("Hello World %d!\n", i);
-        i ++;
-        vTaskDelay(5000 / portTICK_PERIOD_MS);
+        printf("%s\n", wifi_ssid);
     }
 }
