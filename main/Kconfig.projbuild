@@ -1,0 +1,12 @@
+menu "MatrixClock Configuration"
+config ESP_WIFI_SSID
+    string "SSID"
+    default "ssid"
+    help
+    The WiFi SSID to connect to
+config ESP_WIFI_PASSWORD
+    string "PASS"
+    default "pass"
+    help
+    The WiFi password to use
+endmenu
