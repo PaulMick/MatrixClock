@@ -3,6 +3,9 @@ esp-idf/
 build/
 sdkconfig*
 
+# Python venv
+env-matrixclock/
+
 # Prerequisites
 *.d
 
