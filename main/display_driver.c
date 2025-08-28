@@ -8,6 +8,8 @@
 #include "esp_rom_sys.h"
 #include "esp_heap_caps.h"
 
+#include "display_driver.h"
+
 // Board dependent
 #define R1 25
 #define G1 26
@@ -50,17 +52,9 @@ int *in_done_ptr = &in_done;
 // Scanning bitplanes used to correctly format row pixel data into the correct format for RGB channel PWM
 uint8_t *bitplane_buf[COLOR_DEPTH];
 
-// Struct containing pointers and parameters necessary to access the in frame buffer
-struct DisplayHandle {
-    uint8_t (*frame_buf_ptr)[DISPLAY_HEIGHT][DISPLAY_WIDTH][3];
-    int width;
-    int height;
-    int *in_done_ptr;
-};
-
 // Get a display handle
-struct DisplayHandle get_display_handle() {
-    struct DisplayHandle display_handle = {
+DisplayHandle get_display_handle() {
+    DisplayHandle display_handle = {
         .width = DISPLAY_WIDTH,
         .height = DISPLAY_HEIGHT,
         .frame_buf_ptr = frame_buf_in_ptr,

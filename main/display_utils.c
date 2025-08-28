@@ -6,6 +6,8 @@
 #define DISPLAY_WIDTH 64
 #define DISPLAY_HEIGHT 32
 
+#define FONT_FILE "5x5_flex.font"
+
 const char *months_full[12] = {"JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"};
 const char *months_short[12] = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
 
@@ -108,9 +110,9 @@ void fill_dislpay(uint8_t (*frame_buf)[DISPLAY_HEIGHT][DISPLAY_WIDTH][3], uint8_
 // draw bmp img (bmp, x, y)
 // draw animation frame (animation bmps, time, x, y) -> done?: int (yes/no)
 
-int load_font(char *fname) {
+int load_font() {
     FILE * fp;
-    fp = fopen(fname, "r");
+    fp = fopen(FONT_FILE, "r");
     if (fp == NULL) {
         return 0;
     }

@@ -11,6 +11,8 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
+#include "matrix_clock.h"
+
 #define WIFI_SSID "Purdue Guest"
 #define WIFI_PASS ""
 
@@ -107,5 +109,5 @@ void app_main(void) {
     ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
     wifi_init_sta();
 
-    
+    matrix_clock_run();
 }
