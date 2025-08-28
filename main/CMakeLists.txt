@@ -1,4 +1,4 @@
 idf_component_register(
-    SRCS "main.c"
-    INCLUDE_DIRS ""
+    SRCS "main.c" "display_driver.c" "display_utils.c"
+    INCLUDE_DIRS "assets"
 )
