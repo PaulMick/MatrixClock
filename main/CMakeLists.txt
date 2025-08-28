@@ -1,4 +1,4 @@
 idf_component_register(
-    SRCS "main.c" "secrets.c"
+    SRCS "main.c"
     INCLUDE_DIRS ""
 )
