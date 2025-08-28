@@ -6,6 +6,9 @@ sdkconfig*
 # Python venv
 env-matrixclock/
 
+# VSCode
+.vscode/
+
 # Prerequisites
 *.d
 
