@@ -1,4 +1,7 @@
 #include <stdio.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "driver/gpio.h"
 
 #include "display_driver.h"
 #include "display_utils.h"
@@ -12,8 +15,10 @@ void display_init() {
     int load_font_result = load_font();
 
     run_refresh();
+    printf("Display Initialization Complete\n");
 }
 
 void display_update() {
-
+    // printf("update ");
+    vTaskDelay(10 / portTICK_PERIOD_MS);
 }

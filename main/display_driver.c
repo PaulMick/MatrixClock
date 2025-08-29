@@ -11,28 +11,28 @@
 #include "display_driver.h"
 
 // Board dependent
-#define R1 25
-#define G1 26
-#define B1 27
-#define R2 14
+#define R1 9
+#define G1 10
+#define B1 11
+#define R2 12
 #define G2 13
-#define B2 12
+#define B2 14
 
 // Board dependent
-#define A 23
-#define B 22
-#define C 5
-#define D 17
-#define LAT 4
-#define OE 15
-#define CLK 16
+#define A 35
+#define B 45
+#define C 48
+#define D 47
+#define CLK 21
+#define LAT 20
+#define OE 19
 
 #define DISPLAY_WIDTH 64 // Horizontal pixel count of display
 #define DISPLAY_HEIGHT 32 // Vertical pixel count of display
 #define COLOR_DEPTH 4 // Bit depth of each of the 3 color channels
 #define SCAN_LINES 2 // 1/16 -> 2 lines are scanned at a time (1/16th of the display is scanned at a time)
 
-#define I2S_SAMPLE_RATE 2000000
+#define I2S_SAMPLE_RATE 150000
 #define BASE_DELAY_US 200 // Shortest delay used for I2S
 
 // Double frame buffer
@@ -52,6 +52,9 @@ int *in_done_ptr = &in_done;
 // Scanning bitplanes used to correctly format row pixel data into the correct format for RGB channel PWM
 uint8_t *bitplane_buf[COLOR_DEPTH];
 
+// I2S channel handle
+i2s_chan_handle_t tx_chan;
+
 // Get a display handle
 DisplayHandle get_display_handle() {
     DisplayHandle display_handle = {
@@ -65,7 +68,7 @@ DisplayHandle get_display_handle() {
 
 void init_gpio() {
     gpio_config_t gpio_cfg = {
-        .pin_bit_mask = (1ULL << A) | (1ULL << B) | (1ULL << C) | (1ULL << D) | (1ULL << LAT) | (1ULL << OE) | (1ULL << CLK),
+        .pin_bit_mask = ((1ULL << A) | (1ULL << B) | (1ULL << C) | (1ULL << D) | (1ULL << LAT) | (1ULL << OE) | (1ULL << CLK)),
         .mode = GPIO_MODE_OUTPUT,
         .pull_up_en = 0,
         .pull_down_en = 0,
@@ -81,7 +84,6 @@ void init_i2s() {
     chan_cfg.dma_desc_num = 64;
     chan_cfg.dma_frame_num = 64;
     chan_cfg.auto_clear = true;
-    i2s_chan_handle_t tx_chan;
     i2s_new_channel(&chan_cfg, &tx_chan, NULL);
     i2s_std_config_t std_cfg = {
         .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(I2S_SAMPLE_RATE),
@@ -95,6 +97,7 @@ void init_i2s() {
         }
     };
     i2s_channel_init_std_mode(tx_chan, &std_cfg);
+    i2s_channel_enable(tx_chan);
 }
 
 // TODO: Might not be needed???
@@ -143,7 +146,7 @@ void render_row(uint8_t row) {
     for (int bit_depth = 0; bit_depth < COLOR_DEPTH; bit_depth ++) {
         size_t bytes_written;
         gpio_set_level(OE, 1);
-        i2s_channel_write(I2S_NUM_0, bitplane_buf[bit_depth], DISPLAY_WIDTH, &bytes_written, portMAX_DELAY);
+        i2s_channel_write(tx_chan, bitplane_buf[bit_depth], DISPLAY_WIDTH, &bytes_written, 1);
         gpio_set_level(LAT, 1);
         gpio_set_level(LAT, 0);
         gpio_set_level(OE, 0);
@@ -160,9 +163,16 @@ void refresh_task(void *param) {
         for (uint8_t row = 0; row < (uint8_t) (DISPLAY_HEIGHT / SCAN_LINES); row ++) {
             render_row(row);
         }
+        vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 }
 
+// Task to test the refresh task creation
+void test_task(void *param) {
+
+}
+
+// Call this to start the display refresh task
 void run_refresh() {
     init_gpio();
     init_i2s();
@@ -188,5 +198,5 @@ void run_refresh() {
         }
     }
 
-    xTaskCreatePinnedToCore(refresh_task, "Refresh Task", 4096, NULL, 1, NULL, 0);
+    xTaskCreatePinnedToCore(refresh_task, "Refresh Task", 4096, xTaskGetCurrentTaskHandle(), 10, NULL, 1);
 }
