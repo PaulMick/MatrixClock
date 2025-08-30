@@ -167,11 +167,6 @@ void refresh_task(void *param) {
     }
 }
 
-// Task to test the refresh task creation
-void test_task(void *param) {
-
-}
-
 // Call this to start the display refresh task
 void run_refresh() {
     init_gpio();
