@@ -18,7 +18,7 @@
 #define B2 14
 
 // Board dependent
-#define A 35
+#define A 36
 #define B 45
 #define C 48
 #define D 47
@@ -79,15 +79,13 @@ void prep_bitplanes() {
                 uint8_t r2 = (*frame_buf_out_ptr)[row + DISPLAY_HEIGHT / SCAN_LINES][col][0];
                 uint8_t g2 = (*frame_buf_out_ptr)[row + DISPLAY_HEIGHT / SCAN_LINES][col][1];
                 uint8_t b2 = (*frame_buf_out_ptr)[row + DISPLAY_HEIGHT / SCAN_LINES][col][2];
-                printf("r1 %d, g1 %d, b1 %d, r2 %d, g2 %d, b2 %d ", r1, g1, b2, r2, g2, b2);
                 uint8_t rgb_bit_slice = 0;
-                rgb_bit_slice |= ((r1 >> (7 - depth)) & 1) << 7;
-                rgb_bit_slice |= ((g1 >> (7 - depth)) & 1) << 6;
-                rgb_bit_slice |= ((b1 >> (7 - depth)) & 1) << 5;
-                rgb_bit_slice |= ((r2 >> (7 - depth)) & 1) << 4;
-                rgb_bit_slice |= ((g2 >> (7 - depth)) & 1) << 3;
-                rgb_bit_slice |= ((b2 >> (7 - depth)) & 1) << 2;
-                printf("slice %d\n", rgb_bit_slice);
+                rgb_bit_slice |= (((r1 >> (7 - depth)) & 0x01)) << 0;
+                rgb_bit_slice |= (((g1 >> (7 - depth)) & 0x01)) << 1;
+                rgb_bit_slice |= (((b1 >> (7 - depth)) & 0x01)) << 2;
+                rgb_bit_slice |= (((r2 >> (7 - depth)) & 0x01)) << 3;
+                rgb_bit_slice |= (((g2 >> (7 - depth)) & 0x01)) << 4;
+                rgb_bit_slice |= (((b2 >> (7 - depth)) & 0x01)) << 5;
                 bitplane_buf[row][col][depth] = rgb_bit_slice;
             }
         }
@@ -121,18 +119,16 @@ void refresh_task(void *param) {
             *in_done_ptr = 0;
         }
         // Main render
-        // printf("b %d\n", bitplane_buf[0][0][0]);
         prep_bitplanes();
-        // printf("c %d\n", bitplane_buf[0][0][0]);
+        gpio_set_level(OE, 0);
         for (int depth = 0; depth < COLOR_DEPTH; depth ++) {
-            for (int i = 0; i < 1 << depth; i ++) {
+            for (int i = 0; i < (1 << (COLOR_DEPTH - depth)); i ++) {
                 for (uint8_t row = 0; row < (uint8_t) (DISPLAY_HEIGHT / SCAN_LINES); row ++) {
-                    gpio_set_level(A, (row & 0x01) >> 0);
-                    gpio_set_level(B, (row & 0x02) >> 1);
-                    gpio_set_level(C, (row & 0x04) >> 2);
-                    gpio_set_level(D, (row & 0x08) >> 3);
+                    gpio_set_level(A, (row >> 0) & 0x01);
+                    gpio_set_level(B, (row >> 1) & 0x01);
+                    gpio_set_level(C, (row >> 2) & 0x01);
+                    gpio_set_level(D, (row >> 3) & 0x01);
                     for (uint8_t col = 0; col < DISPLAY_WIDTH; col ++) {
-                        
                         gpio_set_level(R1, (bitplane_buf[row][col][depth] & 0x01) >> 0);
                         gpio_set_level(G1, (bitplane_buf[row][col][depth] & 0x02) >> 1);
                         gpio_set_level(B1, (bitplane_buf[row][col][depth] & 0x04) >> 2);
@@ -153,6 +149,7 @@ void refresh_task(void *param) {
                 }
             }
         }
+        gpio_set_level(OE, 1);
         // End main render
         vTaskDelay(10 / portTICK_PERIOD_MS);
     }
@@ -181,7 +178,7 @@ void run_refresh() {
         for (int x = 0; x < DISPLAY_WIDTH; x ++) {
             frame_buf_in[y][x][0] = x;
             frame_buf_in[y][x][1] = y;
-            frame_buf_in[y][x][2] = x + y;
+            frame_buf_in[y][x][2] = 0;
         }
     }
 
@@ -189,7 +186,7 @@ void run_refresh() {
         for (int x = 0; x < DISPLAY_WIDTH; x ++) {
             frame_buf_out[y][x][0] = x;
             frame_buf_out[y][x][1] = y;
-            frame_buf_out[y][x][2] = x + y;
+            frame_buf_out[y][x][2] = 0;
         }
     }
 
