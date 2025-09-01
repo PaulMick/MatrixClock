@@ -22,8 +22,8 @@
 #define B 45
 #define C 48
 #define D 47
-#define CLK 21
-#define LAT 20
+#define CLK 20
+#define LAT 21
 #define OE 19
 
 #define DISPLAY_WIDTH 64 // Horizontal pixel count of display
@@ -124,45 +124,37 @@ void refresh_task(void *param) {
         }
         // Main render
         gpio_set_level(OE, 0);
+        int depth = 0;
         // for (int depth = COLOR_DEPTH - 1; depth > 0; depth --) {
-            // for (uint8_t row = 0; row < (uint8_t) (DISPLAY_HEIGHT / SCAN_LINES); row ++) {
-                // gpio_set_level(A, (row >> 0) & 0x01);
-                // gpio_set_level(B, (row >> 1) & 0x01);
-                // gpio_set_level(C, (row >> 2) & 0x01);
-                // gpio_set_level(D, (row >> 3) & 0x01);
-                gpio_set_level(A, 1);
-                gpio_set_level(B, 1);
-                gpio_set_level(C, 1);
-                gpio_set_level(D, 1);
-                for (uint8_t col = 0; col < DISPLAY_WIDTH; col ++) {
+            for (uint8_t row = 0; row < (uint8_t) (DISPLAY_HEIGHT / SCAN_LINES); row ++) {
+                gpio_set_level(A, (row >> 0) & 0x01);
+                gpio_set_level(B, (row >> 1) & 0x01);
+                gpio_set_level(C, (row >> 2) & 0x01);
+                gpio_set_level(D, (row >> 3) & 0x01);
+                // gpio_set_level(A, 1);
+                // gpio_set_level(B, 1);
+                // gpio_set_level(C, 1);
+                // gpio_set_level(D, 1);
+                for (uint8_t col = 0; col < (uint8_t) (DISPLAY_WIDTH); col ++) {
                     // gpio_set_level(R1, (bitplane_buf[row][col][depth] >> 0) & 0x01);
                     // gpio_set_level(G1, (bitplane_buf[row][col][depth] >> 1) & 0x01);
                     // gpio_set_level(B1, (bitplane_buf[row][col][depth] >> 2) & 0x01);
                     // gpio_set_level(R2, (bitplane_buf[row][col][depth] >> 3) & 0x01);
                     // gpio_set_level(G2, (bitplane_buf[row][col][depth] >> 4) & 0x01);
                     // gpio_set_level(B2, (bitplane_buf[row][col][depth] >> 5) & 0x01);
-                    if (col == 62) {
-                        gpio_set_level(R1, 1);
-                        gpio_set_level(G1, 1);
-                        gpio_set_level(B1, 1);
-                        gpio_set_level(R2, 1);
-                        gpio_set_level(G2, 1);
-                        gpio_set_level(B2, 1);
-                    } else {
-                        gpio_set_level(R1, 0);
-                        gpio_set_level(G1, 0);
-                        gpio_set_level(B1, 0);
-                        gpio_set_level(R2, 0);
-                        gpio_set_level(G2, 0);
-                        gpio_set_level(B2, 0);
-                    }
+                    gpio_set_level(R1, col == 0);
+                    gpio_set_level(G1, row == 0);
+                    gpio_set_level(B1, 0);
+                    gpio_set_level(R2, col == 63);
+                    gpio_set_level(G2, row == 15);
+                    gpio_set_level(B2, 0);
                     gpio_set_level(CLK, 1);
                     gpio_set_level(CLK, 0);
                 }
                 gpio_set_level(LAT, 1);
                 gpio_set_level(LAT, 0);
                 // esp_rom_delay_us(BASE_DELAY_US * (1 << (COLOR_DEPTH - depth)));
-            // }
+            }
         // }
         gpio_set_level(OE, 1);
         // End main render
@@ -184,9 +176,13 @@ void run_refresh() {
 
     for (int y = 0; y < DISPLAY_HEIGHT; y ++) {
         for (int x = 0; x < DISPLAY_WIDTH; x ++) {
-            frame_buf_out[y][x][0] = 0;
+            if (x == 63) {
+                frame_buf_out[y][x][0] = 255;
+            } else {
+                frame_buf_out[y][x][0] = 0;
+            }
             frame_buf_out[y][x][1] = 0;
-            if (y < 6) {
+            if (y == 31) {
                 frame_buf_out[y][x][2] = 255;
             } else {
                 frame_buf_out[y][x][2] = 0;
@@ -194,5 +190,5 @@ void run_refresh() {
         }
     }
 
-    xTaskCreatePinnedToCore(refresh_task, "Refresh Task", 8192, xTaskGetCurrentTaskHandle(), 10, NULL, 1);
+    xTaskCreatePinnedToCore(refresh_task, "Refresh Task", 4096, xTaskGetCurrentTaskHandle(), 10, NULL, 1);
 }
