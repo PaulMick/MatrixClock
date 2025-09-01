@@ -31,7 +31,7 @@
 #define COLOR_DEPTH 4 // Bit depth of each of the 3 color channels
 #define SCAN_LINES 2 // 1/16 -> 2 lines are scanned at a time (1/16th of the display is scanned at a time)
 
-#define BASE_DELAY_US 1
+#define BASE_DELAY_US 10
 
 // Double frame buffer
 uint8_t frame_buf_in[DISPLAY_HEIGHT][DISPLAY_WIDTH][3];
@@ -73,6 +73,9 @@ void prep_bitplanes() {
         for (int col = 0; col < DISPLAY_WIDTH; col ++) {
             for (int depth = 0; depth < COLOR_DEPTH; depth ++) {
                 uint8_t r1 = (*frame_buf_out_ptr)[row][col][0];
+                // if ((r1 | (1 << (7 - COLOR_DEPTH))) > (1 << (7 - COLOR_DEPTH))) {
+                //     r1 += 1 << (8 - COLOR_DEPTH);
+                // }
                 uint8_t g1 = (*frame_buf_out_ptr)[row][col][1];
                 uint8_t b1 = (*frame_buf_out_ptr)[row][col][2];
                 uint8_t r2 = (*frame_buf_out_ptr)[row + DISPLAY_HEIGHT / SCAN_LINES][col][0];
@@ -121,17 +124,12 @@ void refresh_task(void *param) {
         }
         // Main render
         gpio_set_level(OE, 0);
-        uint8_t depth = 0;
-        // for (int depth = COLOR_DEPTH - 1; depth > 0; depth --) {
+        for (int depth = 0; depth < COLOR_DEPTH; depth ++) {
             for (uint8_t row = 0; row < (uint8_t) (DISPLAY_HEIGHT / SCAN_LINES); row ++) {
                 gpio_set_level(A, ((row - 1) >> 0) & 0x01);
                 gpio_set_level(B, ((row - 1) >> 1) & 0x01);
                 gpio_set_level(C, ((row - 1) >> 2) & 0x01);
                 gpio_set_level(D, ((row - 1) >> 3) & 0x01);
-                // gpio_set_level(A, 1);
-                // gpio_set_level(B, 1);
-                // gpio_set_level(C, 1);
-                // gpio_set_level(D, 1);
                 gpio_set_level(OE, 0);
                 for (uint8_t col = 0; col < (uint8_t) (DISPLAY_WIDTH); col ++) {
                     gpio_set_level(R1, (bitplane_buf[row][col][depth] >> 0) & 0x01);
@@ -140,32 +138,16 @@ void refresh_task(void *param) {
                     gpio_set_level(R2, (bitplane_buf[row][col][depth] >> 3) & 0x01);
                     gpio_set_level(G2, (bitplane_buf[row][col][depth] >> 4) & 0x01);
                     gpio_set_level(B2, (bitplane_buf[row][col][depth] >> 5) & 0x01);
-                    // if (row == 0) {
-                    //     gpio_set_level(R1, 1);
-                    //     gpio_set_level(G1, 0);
-                    //     gpio_set_level(B1, 0);
-                    //     gpio_set_level(R2, 1);
-                    //     gpio_set_level(G2, 0);
-                    //     gpio_set_level(B2, 0);
-                    // } else {
-                    //     gpio_set_level(R1, 0);
-                    //     gpio_set_level(G1, 1);
-                    //     gpio_set_level(B1, 0);
-                    //     gpio_set_level(R2, 0);
-                    //     gpio_set_level(G2, 1);
-                    //     gpio_set_level(B2, 0);
-                    // }
                     gpio_set_level(CLK, 1);
                     gpio_set_level(CLK, 0);
-                    // printf("r%d t1%d t2%d\n", row, row == 15, row == 14);
                 }
+                esp_rom_delay_us(BASE_DELAY_US * (1 << (COLOR_DEPTH - depth)));
                 gpio_set_level(OE, 1);
                 gpio_set_level(LAT, 1);
                 gpio_set_level(LAT, 0);
-                
-                // esp_rom_delay_us(BASE_DELAY_US * (1 << (COLOR_DEPTH - depth)));
+                // vTaskDelay(50 / portTICK_PERIOD_MS);
             }
-        // }
+        }
         gpio_set_level(OE, 1);
         // End main render
         // vTaskDelay(1 / portTICK_PERIOD_MS);
@@ -186,17 +168,9 @@ void run_refresh() {
 
     for (int y = 0; y < DISPLAY_HEIGHT; y ++) {
         for (int x = 0; x < DISPLAY_WIDTH; x ++) {
-            if (x == 63) {
-                frame_buf_out[y][x][0] = 255;
-            } else {
-                frame_buf_out[y][x][0] = 0;
-            }
+            frame_buf_out[y][x][0] = x * 4;
             frame_buf_out[y][x][1] = 0;
-            if (y == 31) {
-                frame_buf_out[y][x][2] = 255;
-            } else {
-                frame_buf_out[y][x][2] = 0;
-            }
+            frame_buf_out[y][x][2] = y * 8;
         }
     }
 
