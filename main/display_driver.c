@@ -31,8 +31,7 @@
 #define COLOR_DEPTH 4 // Bit depth of each of the 3 color channels
 #define SCAN_LINES 2 // 1/16 -> 2 lines are scanned at a time (1/16th of the display is scanned at a time)
 
-#define I2S_SAMPLE_RATE 150000
-#define BASE_DELAY_US 200 // Shortest delay used for I2S
+#define BASE_DELAY_US 1
 
 // Double frame buffer
 uint8_t frame_buf_in[DISPLAY_HEIGHT][DISPLAY_WIDTH][3];
@@ -87,6 +86,9 @@ void prep_bitplanes() {
                 rgb_bit_slice |= (((g2 >> (7 - depth)) & 0x01)) << 4;
                 rgb_bit_slice |= (((b2 >> (7 - depth)) & 0x01)) << 5;
                 bitplane_buf[row][col][depth] = rgb_bit_slice;
+                // if (b2 == 255 || b1 == 255) {
+                //     printf("d %x, s %x\n", depth, rgb_bit_slice);
+                // }
             }
         }
     }
@@ -103,7 +105,7 @@ void init_gpio() {
     gpio_config(&gpio_cfg);
     gpio_set_level(CLK, 0);
     gpio_set_level(LAT, 0);
-    gpio_set_level(OE, 0);
+    gpio_set_level(OE, 1);
     gpio_set_level(R1, 0);
     gpio_set_level(G1, 0);
     gpio_set_level(B1, 0);
@@ -113,45 +115,58 @@ void init_gpio() {
 }
 
 void refresh_task(void *param) {
+    prep_bitplanes();
     while (1) {
         if (*in_done_ptr) {
             swap_frame_buffers();
             *in_done_ptr = 0;
+            prep_bitplanes();
         }
         // Main render
-        prep_bitplanes();
         gpio_set_level(OE, 0);
-        for (int depth = 0; depth < COLOR_DEPTH; depth ++) {
-            for (int i = 0; i < (1 << (COLOR_DEPTH - depth)); i ++) {
-                for (uint8_t row = 0; row < (uint8_t) (DISPLAY_HEIGHT / SCAN_LINES); row ++) {
-                    gpio_set_level(A, (row >> 0) & 0x01);
-                    gpio_set_level(B, (row >> 1) & 0x01);
-                    gpio_set_level(C, (row >> 2) & 0x01);
-                    gpio_set_level(D, (row >> 3) & 0x01);
-                    for (uint8_t col = 0; col < DISPLAY_WIDTH; col ++) {
-                        gpio_set_level(R1, (bitplane_buf[row][col][depth] & 0x01) >> 0);
-                        gpio_set_level(G1, (bitplane_buf[row][col][depth] & 0x02) >> 1);
-                        gpio_set_level(B1, (bitplane_buf[row][col][depth] & 0x04) >> 2);
-                        gpio_set_level(R2, (bitplane_buf[row][col][depth] & 0x08) >> 3);
-                        gpio_set_level(G2, (bitplane_buf[row][col][depth] & 0x10) >> 4);
-                        gpio_set_level(B2, (bitplane_buf[row][col][depth] & 0x20) >> 5);
-                        // gpio_set_level(R1, 0);
-                        // gpio_set_level(G1, 0);
-                        // gpio_set_level(B1, 0);
-                        // gpio_set_level(R2, 0);
-                        // gpio_set_level(G2, 0);
-                        // gpio_set_level(B2, 0);
-                        gpio_set_level(CLK, 1);
-                        gpio_set_level(CLK, 0);
+        // for (int depth = COLOR_DEPTH - 1; depth > 0; depth --) {
+            // for (uint8_t row = 0; row < (uint8_t) (DISPLAY_HEIGHT / SCAN_LINES); row ++) {
+                // gpio_set_level(A, (row >> 0) & 0x01);
+                // gpio_set_level(B, (row >> 1) & 0x01);
+                // gpio_set_level(C, (row >> 2) & 0x01);
+                // gpio_set_level(D, (row >> 3) & 0x01);
+                gpio_set_level(A, 1);
+                gpio_set_level(B, 1);
+                gpio_set_level(C, 1);
+                gpio_set_level(D, 1);
+                for (uint8_t col = 0; col < DISPLAY_WIDTH; col ++) {
+                    // gpio_set_level(R1, (bitplane_buf[row][col][depth] >> 0) & 0x01);
+                    // gpio_set_level(G1, (bitplane_buf[row][col][depth] >> 1) & 0x01);
+                    // gpio_set_level(B1, (bitplane_buf[row][col][depth] >> 2) & 0x01);
+                    // gpio_set_level(R2, (bitplane_buf[row][col][depth] >> 3) & 0x01);
+                    // gpio_set_level(G2, (bitplane_buf[row][col][depth] >> 4) & 0x01);
+                    // gpio_set_level(B2, (bitplane_buf[row][col][depth] >> 5) & 0x01);
+                    if (col == 62) {
+                        gpio_set_level(R1, 1);
+                        gpio_set_level(G1, 1);
+                        gpio_set_level(B1, 1);
+                        gpio_set_level(R2, 1);
+                        gpio_set_level(G2, 1);
+                        gpio_set_level(B2, 1);
+                    } else {
+                        gpio_set_level(R1, 0);
+                        gpio_set_level(G1, 0);
+                        gpio_set_level(B1, 0);
+                        gpio_set_level(R2, 0);
+                        gpio_set_level(G2, 0);
+                        gpio_set_level(B2, 0);
                     }
-                    gpio_set_level(LAT, 1);
-                    gpio_set_level(LAT, 0);
+                    gpio_set_level(CLK, 1);
+                    gpio_set_level(CLK, 0);
                 }
-            }
-        }
+                gpio_set_level(LAT, 1);
+                gpio_set_level(LAT, 0);
+                // esp_rom_delay_us(BASE_DELAY_US * (1 << (COLOR_DEPTH - depth)));
+            // }
+        // }
         gpio_set_level(OE, 1);
         // End main render
-        vTaskDelay(10 / portTICK_PERIOD_MS);
+        // vTaskDelay(1 / portTICK_PERIOD_MS);
     }
 }
 
@@ -159,36 +174,25 @@ void refresh_task(void *param) {
 void run_refresh() {
     init_gpio();
 
-    // for (int row = 0; row < (DISPLAY_HEIGHT / SCAN_LINES);  row ++) {
-    //     for (int bit_depth = 0; bit_depth < COLOR_DEPTH; bit_depth ++) {
-    //         bitplane_buf[row][bit_depth] = heap_caps_malloc(DISPLAY_WIDTH, MALLOC_CAP_DMA);
-    //         memset(bitplane_buf[row][bit_depth], 0, DISPLAY_WIDTH);
-    //     }
-    // }
-    for (int i = 0; i < DISPLAY_HEIGHT; i ++) {
-        for (int j = 0; j < DISPLAY_WIDTH; j ++) {
-            for (int d = 0; d < COLOR_DEPTH; d ++) {
-                bitplane_buf[i][j][d] = 255;
-            }
-        }
-    }
-    // printf("a %d\n", bitplane_buf[0][0][0]);
-
     for (int y = 0; y < DISPLAY_HEIGHT; y ++) {
         for (int x = 0; x < DISPLAY_WIDTH; x ++) {
-            frame_buf_in[y][x][0] = x;
-            frame_buf_in[y][x][1] = y;
+            frame_buf_in[y][x][0] = x * 4;
+            frame_buf_in[y][x][1] = 0;
             frame_buf_in[y][x][2] = 0;
         }
     }
 
     for (int y = 0; y < DISPLAY_HEIGHT; y ++) {
         for (int x = 0; x < DISPLAY_WIDTH; x ++) {
-            frame_buf_out[y][x][0] = x;
-            frame_buf_out[y][x][1] = y;
-            frame_buf_out[y][x][2] = 0;
+            frame_buf_out[y][x][0] = 0;
+            frame_buf_out[y][x][1] = 0;
+            if (y < 6) {
+                frame_buf_out[y][x][2] = 255;
+            } else {
+                frame_buf_out[y][x][2] = 0;
+            }
         }
     }
 
-    xTaskCreatePinnedToCore(refresh_task, "Refresh Task", 4096, xTaskGetCurrentTaskHandle(), 10, NULL, 1);
+    xTaskCreatePinnedToCore(refresh_task, "Refresh Task", 8192, xTaskGetCurrentTaskHandle(), 10, NULL, 1);
 }
