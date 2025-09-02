@@ -34,15 +34,17 @@
 #define BASE_DELAY_US 1
 
 // Double frame buffer
-uint8_t frame_buf_0[DISPLAY_HEIGHT][DISPLAY_WIDTH][3];
-uint8_t frame_buf_1[DISPLAY_HEIGHT][DISPLAY_WIDTH][3];
-// Pointer to the current display buffer
-uint8_t (*frame_buf_ptr)[DISPLAY_HEIGHT][DISPLAY_WIDTH][3];
+uint8_t frame_buf_in[DISPLAY_HEIGHT][DISPLAY_WIDTH][3];
+uint8_t frame_buf_out[DISPLAY_HEIGHT][DISPLAY_WIDTH][3];
+// Frame buffer pointers
+uint8_t (*frame_buf_in_ptr)[DISPLAY_HEIGHT][DISPLAY_WIDTH][3] = &frame_buf_in;
+uint8_t (*frame_buf_out_ptr)[DISPLAY_HEIGHT][DISPLAY_WIDTH][3] = &frame_buf_out;
+// Temp pointer for swapping frame buffer pointers
+uint8_t (*tmp)[DISPLAY_HEIGHT][DISPLAY_WIDTH][3];
 
-// Indicator of which buffer if being written to
-int buf_num = 0;
-int prev_buf_num = 0;
-int *buf_num_ptr = &buf_num;
+// Indicator of whether the in frame buffer is completed
+int in_done = 0;
+int *in_done_ptr = &in_done;
 
 // Scanning bitplanes used to correctly format row pixel data into the correct format for RGB channel PWM
 uint8_t bitplane_buf[DISPLAY_HEIGHT][DISPLAY_WIDTH][COLOR_DEPTH];
@@ -52,11 +54,17 @@ DisplayHandle get_display_handle() {
     DisplayHandle display_handle = {
         .width = DISPLAY_WIDTH,
         .height = DISPLAY_HEIGHT,
-        .frame_buf_ptr_0 = &frame_buf_0,
-        .frame_buf_ptr_1 = &frame_buf_1,
-        .buf_num_ptr = buf_num_ptr
+        .frame_buf_ptr = frame_buf_in_ptr,
+        .in_done_ptr = in_done_ptr
     };
     return display_handle;
+}
+
+// Swaps the pointers to the two frame buffers
+void swap_frame_buffers() {
+    tmp = frame_buf_in_ptr;
+    frame_buf_in_ptr = frame_buf_out_ptr;
+    frame_buf_out_ptr = tmp;
 }
 
 // Prepare the bitplanes for a pair of rows
@@ -64,12 +72,12 @@ void prep_bitplanes() {
     for (uint8_t row = 0; row < (uint8_t) (DISPLAY_HEIGHT / SCAN_LINES); row ++) {
         for (int col = 0; col < DISPLAY_WIDTH; col ++) {
             for (int depth = 0; depth < COLOR_DEPTH; depth ++) {
-                uint8_t r1 = (*frame_buf_ptr)[row][col][0];
-                uint8_t g1 = (*frame_buf_ptr)[row][col][1];
-                uint8_t b1 = (*frame_buf_ptr)[row][col][2];
-                uint8_t r2 = (*frame_buf_ptr)[row + DISPLAY_HEIGHT / SCAN_LINES][col][0];
-                uint8_t g2 = (*frame_buf_ptr)[row + DISPLAY_HEIGHT / SCAN_LINES][col][1];
-                uint8_t b2 = (*frame_buf_ptr)[row + DISPLAY_HEIGHT / SCAN_LINES][col][2];
+                uint8_t r1 = (*frame_buf_out_ptr)[row][col][0];
+                uint8_t g1 = (*frame_buf_out_ptr)[row][col][1];
+                uint8_t b1 = (*frame_buf_out_ptr)[row][col][2];
+                uint8_t r2 = (*frame_buf_out_ptr)[row + DISPLAY_HEIGHT / SCAN_LINES][col][0];
+                uint8_t g2 = (*frame_buf_out_ptr)[row + DISPLAY_HEIGHT / SCAN_LINES][col][1];
+                uint8_t b2 = (*frame_buf_out_ptr)[row + DISPLAY_HEIGHT / SCAN_LINES][col][2];
                 uint8_t rgb_bit_slice = 0;
                 rgb_bit_slice |= (((r1 >> (7 - depth)) & 0x01)) << 0;
                 rgb_bit_slice |= (((g1 >> (7 - depth)) & 0x01)) << 1;
@@ -106,13 +114,9 @@ void init_gpio() {
 void refresh_task(void *param) {
     prep_bitplanes();
     while (1) {
-        if (prev_buf_num == 0 && *buf_num_ptr == 1) {
-            frame_buf_ptr = &frame_buf_0;
-            prev_buf_num = 1;
-            prep_bitplanes();
-        } else if (prev_buf_num == 1 && *buf_num_ptr == 0) {
-            frame_buf_ptr = &frame_buf_1;
-            prev_buf_num = 0;
+        if (*in_done_ptr) {
+            swap_frame_buffers();
+            *in_done_ptr = 0;
             prep_bitplanes();
         }
         // Main render
@@ -151,17 +155,17 @@ void run_refresh() {
 
     for (int y = 0; y < DISPLAY_HEIGHT; y ++) {
         for (int x = 0; x < DISPLAY_WIDTH; x ++) {
-            frame_buf_0[y][x][0] = 0;
-            frame_buf_0[y][x][1] = 0;
-            frame_buf_0[y][x][2] = 0;
+            frame_buf_in[y][x][0] = x * 4;
+            frame_buf_in[y][x][1] = 0;
+            frame_buf_in[y][x][2] = 0;
         }
     }
 
     for (int y = 0; y < DISPLAY_HEIGHT; y ++) {
         for (int x = 0; x < DISPLAY_WIDTH; x ++) {
-            frame_buf_1[y][x][0] = 0;
-            frame_buf_1[y][x][1] = 0;
-            frame_buf_1[y][x][2] = 0;
+            frame_buf_out[y][x][0] = x * 4;
+            frame_buf_out[y][x][1] = 0;
+            frame_buf_out[y][x][2] = y * 8;
         }
     }
 
