@@ -19,7 +19,8 @@ void display_init() {
 }
 
 void display_update() {
+    (*(display_handle.frame_buf_ptr))[31][63][0] = 255;
+    *(display_handle.in_done_ptr) = 1;
     
-    
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
 }

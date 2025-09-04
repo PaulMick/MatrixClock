@@ -34,13 +34,13 @@
 #define BASE_DELAY_US 1
 
 // Double frame buffer
-uint8_t frame_buf_in[DISPLAY_HEIGHT][DISPLAY_WIDTH][3];
-uint8_t frame_buf_out[DISPLAY_HEIGHT][DISPLAY_WIDTH][3];
+uint8_t ***frame_buf_in;
+uint8_t ***frame_buf_out;
 // Frame buffer pointers
-uint8_t (*frame_buf_in_ptr)[DISPLAY_HEIGHT][DISPLAY_WIDTH][3] = &frame_buf_in;
-uint8_t (*frame_buf_out_ptr)[DISPLAY_HEIGHT][DISPLAY_WIDTH][3] = &frame_buf_out;
+uint8_t ****frame_buf_in_ptr = &frame_buf_in;
+uint8_t ****frame_buf_out_ptr = &frame_buf_out;
 // Temp pointer for swapping frame buffer pointers
-uint8_t (*tmp)[DISPLAY_HEIGHT][DISPLAY_WIDTH][3];
+uint8_t ****tmp;
 
 // Indicator of whether the in frame buffer is completed
 int in_done = 0;
@@ -153,16 +153,23 @@ void refresh_task(void *param) {
 void run_refresh() {
     init_gpio();
 
+    
+    frame_buf_in = malloc(DISPLAY_HEIGHT * sizeof(uint8_t**));
+    frame_buf_out = malloc(DISPLAY_HEIGHT * sizeof(uint8_t**));
     for (int y = 0; y < DISPLAY_HEIGHT; y ++) {
+        frame_buf_in[y] = malloc(DISPLAY_WIDTH * sizeof(uint8_t*));
+        frame_buf_out[y] = malloc(DISPLAY_WIDTH * sizeof(uint8_t*));
         for (int x = 0; x < DISPLAY_WIDTH; x ++) {
-            frame_buf_in[y][x][0] = 0;
-            frame_buf_in[y][x][1] = 0;
-            frame_buf_in[y][x][2] = 0;
+            frame_buf_in[y][x] = malloc(3 * sizeof(uint8_t));
+            frame_buf_out[y][x] = malloc(3 * sizeof(uint8_t));
         }
     }
 
     for (int y = 0; y < DISPLAY_HEIGHT; y ++) {
         for (int x = 0; x < DISPLAY_WIDTH; x ++) {
+            frame_buf_in[y][x][0] = 0;
+            frame_buf_in[y][x][1] = 0;
+            frame_buf_in[y][x][2] = 0;
             frame_buf_out[y][x][0] = 0;
             frame_buf_out[y][x][1] = 0;
             frame_buf_out[y][x][2] = 0;
