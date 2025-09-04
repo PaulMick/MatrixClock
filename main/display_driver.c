@@ -155,7 +155,7 @@ void run_refresh() {
 
     for (int y = 0; y < DISPLAY_HEIGHT; y ++) {
         for (int x = 0; x < DISPLAY_WIDTH; x ++) {
-            frame_buf_in[y][x][0] = x * 4;
+            frame_buf_in[y][x][0] = 0;
             frame_buf_in[y][x][1] = 0;
             frame_buf_in[y][x][2] = 0;
         }
@@ -163,9 +163,9 @@ void run_refresh() {
 
     for (int y = 0; y < DISPLAY_HEIGHT; y ++) {
         for (int x = 0; x < DISPLAY_WIDTH; x ++) {
-            frame_buf_out[y][x][0] = x * 4;
+            frame_buf_out[y][x][0] = 0;
             frame_buf_out[y][x][1] = 0;
-            frame_buf_out[y][x][2] = y * 8;
+            frame_buf_out[y][x][2] = 0;
         }
     }
 

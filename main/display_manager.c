@@ -6,12 +6,12 @@
 #include "display_driver.h"
 #include "display_utils.h"
 
-DisplayHandle displayHandle;
+DisplayHandle display_handle;
 
 void display_init() {
     printf("Initializing Display\n");
 
-    displayHandle = get_display_handle();
+    display_handle = get_display_handle();
     int load_font_result = load_font();
 
     run_refresh();
@@ -19,6 +19,7 @@ void display_init() {
 }
 
 void display_update() {
-    // printf("update ");
+    
+    
     vTaskDelay(10 / portTICK_PERIOD_MS);
 }
