@@ -40,7 +40,7 @@ uint8_t ***frame_buf_out;
 uint8_t ****frame_buf_in_ptr = &frame_buf_in;
 uint8_t ****frame_buf_out_ptr = &frame_buf_out;
 // Temp pointer for swapping frame buffer pointers
-uint8_t ****tmp;
+uint8_t ***tmp;
 
 // Indicator of whether the in frame buffer is completed
 int in_done = 0;
@@ -62,9 +62,9 @@ DisplayHandle get_display_handle() {
 
 // Swaps the pointers to the two frame buffers
 void swap_frame_buffers() {
-    tmp = frame_buf_in_ptr;
-    frame_buf_in_ptr = frame_buf_out_ptr;
-    frame_buf_out_ptr = tmp;
+    tmp = frame_buf_in;
+    frame_buf_in = frame_buf_out;
+    frame_buf_out = tmp;
 }
 
 // Prepare the bitplanes for a pair of rows
