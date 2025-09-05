@@ -32,7 +32,9 @@ int draw_char_5x5_flex(uint8_t ****frame_buf, char c, int x, int y, uint8_t r, u
     int width = font_char >> 25;
     for (int i = 0; i < width; i ++) {
         for (int j = 0; j < 5; j ++) {
-            draw_pixel(frame_buf, x + i, y + j, r, g, b);
+            if ((font_char >> (i * 5 + j)) & 0x01) {
+                draw_pixel(frame_buf, x + i, y + j, r, g, b);
+            }
         }
     }
     return width;
@@ -40,7 +42,7 @@ int draw_char_5x5_flex(uint8_t ****frame_buf, char c, int x, int y, uint8_t r, u
 
 // Draw a string of ASCII characters
 // x, y are the top-let corner
-void draw_str(uint8_t ****frame_buf, char *str, enum font font, int x, int y, int spacing, uint8_t r, uint8_t g, uint8_t b) {
+void draw_str(uint8_t ****frame_buf, char *str, font_t font, int x, int y, int spacing, uint8_t r, uint8_t g, uint8_t b) {
     for (int i = 0; i < strlen(str); i ++) {
         int width = 0;
         if (font == FONT_5x5_FLEX) {
@@ -64,7 +66,7 @@ void draw_rect(uint8_t ****frame_buf, int x, int y, int width, int height, int t
 }
 
 // Draws a straight line in one of the four cardinal directions
-void draw_line(uint8_t ****frame_buf, int x, int y, enum direction direction, int length, uint8_t r, uint8_t g, uint8_t b) {
+void draw_line(uint8_t ****frame_buf, int x, int y, direction_t direction, int length, uint8_t r, uint8_t g, uint8_t b) {
     switch (direction) {
         case DIRECTION_UP:
             for (int i = 0; i < length; i ++) {
