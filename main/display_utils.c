@@ -3,10 +3,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "assets.h"
+
 #define DISPLAY_WIDTH 64
 #define DISPLAY_HEIGHT 32
-
-#define FONT_FILE "5x5_flex.font"
 
 const char *months_full[12] = {"JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"};
 const char *months_short[12] = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
@@ -14,14 +14,7 @@ const char *months_short[12] = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL",
 const char *week_days_full[7] = {"MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"};
 const char *week_days_short[7] = {"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"};
 
-const uint32_t font[128];
 
-enum direction {
-    DIRECTION_UP,
-    DIRECTION_DOWN,
-    DIRECTION_LEFT,
-    DIRECTION_RIGHT
-};
 
 // Safe function for drawing a single pixel, checks if pixel coordinates are on the display before writing
 void draw_pixel(uint8_t ****frame_buf, int x, int y, uint8_t r, uint8_t g, uint8_t b) {
@@ -34,8 +27,8 @@ void draw_pixel(uint8_t ****frame_buf, int x, int y, uint8_t r, uint8_t g, uint8
 
 // Draw a single ASCII character
 // x, y are the top-left corner
-int draw_char(uint8_t ****frame_buf, char c, int x, int y, uint8_t r, uint8_t g, uint8_t b) {
-    uint32_t font_char = font[(int) c];
+int draw_char_5x5_flex(uint8_t ****frame_buf, char c, int x, int y, uint8_t r, uint8_t g, uint8_t b) {
+    uint32_t font_char = font_5x5_flex[(int) c];
     int width = font_char >> 25;
     for (int i = 0; i < width; i ++) {
         for (int j = 0; j < 5; j ++) {
@@ -47,9 +40,12 @@ int draw_char(uint8_t ****frame_buf, char c, int x, int y, uint8_t r, uint8_t g,
 
 // Draw a string of ASCII characters
 // x, y are the top-let corner
-void draw_str(uint8_t ****frame_buf, char *str, int x, int y, int spacing, uint8_t r, uint8_t g, uint8_t b) {
+void draw_str(uint8_t ****frame_buf, char *str, enum font font, int x, int y, int spacing, uint8_t r, uint8_t g, uint8_t b) {
     for (int i = 0; i < strlen(str); i ++) {
-        int width = draw_char(frame_buf, str[i], x, y, r, g, b);
+        int width = 0;
+        if (font == FONT_5x5_FLEX) {
+            width = draw_char_5x5_flex(frame_buf, str[i], x, y, r, g, b);
+        }
         x += width + spacing;
     }
 }
@@ -109,16 +105,3 @@ void fill_dislpay(uint8_t ****frame_buf, uint8_t r, uint8_t g, uint8_t b) {
 // TODO functions:
 // draw bmp img (bmp, x, y)
 // draw animation frame (animation bmps, time, x, y) -> done?: int (yes/no)
-
-int load_font() {
-    FILE * fp;
-    fp = fopen(FONT_FILE, "r");
-    if (fp == NULL) {
-        return 0;
-    }
-    size_t bytes_read = fread(font, 4, 128, fp);
-    if (bytes_read != 128) {
-        return 0;
-    }
-    return 1;
-}

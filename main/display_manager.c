@@ -12,7 +12,6 @@ void display_init(int loading_screen) {
     printf("Initializing Display\n");
 
     display_handle = get_display_handle();
-    int load_font_result = load_font();
 
     run_refresh();
     printf("Display Initialization Complete\n");
@@ -20,7 +19,7 @@ void display_init(int loading_screen) {
 
 void display_update() {
     draw_pixel(display_handle.frame_buf_ptr, 63, 31, 255, 255, 255);
-    draw_char(display_handle.frame_buf_ptr, 'P', 15, 31, 255, 255, 255);
+    draw_char_5x5_flex(display_handle.frame_buf_ptr, 'P', 15, 31, 255, 255, 255);
 
     *(display_handle.in_done_ptr) = 1;
     vTaskDelay(1000 / portTICK_PERIOD_MS);
