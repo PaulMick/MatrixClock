@@ -9,8 +9,7 @@
 
 DisplayHandle display_handle;
 
-int x = 0;
-int y = 0;
+int y = -5;
 
 void display_init(int loading_screen) {
     printf("Initializing Display\n");
@@ -24,6 +23,12 @@ void display_init(int loading_screen) {
 void display_update() {
     fill_display(display_handle.frame_buf_ptr, 0, 0, 0);
     // Main Display
+
+    draw_str(display_handle.frame_buf_ptr, "HELLO", FONT_5x5_FLEX, 0, y, 1, 255, 0, 255);
+    y ++;
+    if (y > 32) {
+        y = -5;
+    }
 
     // End Main Display
     prep_bitplanes();
