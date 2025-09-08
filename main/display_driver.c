@@ -33,21 +33,20 @@
 
 #define BASE_DELAY_US 1
 
-// Double frame buffer
 uint8_t ***frame_buf_in;
 uint8_t ***frame_buf_out;
-// Frame buffer pointers
 uint8_t ****frame_buf_in_ptr = &frame_buf_in;
 uint8_t ****frame_buf_out_ptr = &frame_buf_out;
-// Temp pointer for swapping frame buffer pointers
-uint8_t ***tmp;
+uint8_t ***frame_buf_tmp;
 
-// Indicator of whether the in frame buffer is completed
+uint8_t ***bitplane_buf_in;
+uint8_t ***bitplane_buf_out;
+uint8_t ****bitplane_buf_in_ptr = &bitplane_buf_in;
+uint8_t ****bitplane_buf_out_ptr = &bitplane_buf_out;
+uint8_t ***bitplane_tmp;
+
 int in_done = 0;
 int *in_done_ptr = &in_done;
-
-// Scanning bitplanes used to correctly format row pixel data into the correct format for RGB channel PWM
-uint8_t bitplane_buf[DISPLAY_HEIGHT][DISPLAY_WIDTH][COLOR_DEPTH];
 
 // Get a display handle
 DisplayHandle get_display_handle() {
@@ -60,24 +59,28 @@ DisplayHandle get_display_handle() {
     return display_handle;
 }
 
-// Swaps the pointers to the two frame buffers
-void swap_frame_buffers() {
-    tmp = frame_buf_in;
+void swap_frames() {
+    // Swap frame buffers
+    frame_buf_tmp = frame_buf_in;
     frame_buf_in = frame_buf_out;
-    frame_buf_out = tmp;
+    frame_buf_out = frame_buf_tmp;
+    // Swap bitplanes
+    bitplane_tmp = bitplane_buf_in;
+    bitplane_buf_in = bitplane_buf_out;
+    bitplane_buf_out = bitplane_tmp;
 }
 
-// Prepare the bitplanes for a pair of rows
+// Prepare bitplanes for a pair of rows
 void prep_bitplanes() {
     for (uint8_t row = 0; row < (uint8_t) (DISPLAY_HEIGHT / SCAN_LINES); row ++) {
         for (int col = 0; col < DISPLAY_WIDTH; col ++) {
             for (int depth = 0; depth < COLOR_DEPTH; depth ++) {
-                uint8_t r1 = (*frame_buf_out_ptr)[row][col][0];
-                uint8_t g1 = (*frame_buf_out_ptr)[row][col][1];
-                uint8_t b1 = (*frame_buf_out_ptr)[row][col][2];
-                uint8_t r2 = (*frame_buf_out_ptr)[row + DISPLAY_HEIGHT / SCAN_LINES][col][0];
-                uint8_t g2 = (*frame_buf_out_ptr)[row + DISPLAY_HEIGHT / SCAN_LINES][col][1];
-                uint8_t b2 = (*frame_buf_out_ptr)[row + DISPLAY_HEIGHT / SCAN_LINES][col][2];
+                uint8_t r1 = (*frame_buf_in_ptr)[row][col][0];
+                uint8_t g1 = (*frame_buf_in_ptr)[row][col][1];
+                uint8_t b1 = (*frame_buf_in_ptr)[row][col][2];
+                uint8_t r2 = (*frame_buf_in_ptr)[row + DISPLAY_HEIGHT / SCAN_LINES][col][0];
+                uint8_t g2 = (*frame_buf_in_ptr)[row + DISPLAY_HEIGHT / SCAN_LINES][col][1];
+                uint8_t b2 = (*frame_buf_in_ptr)[row + DISPLAY_HEIGHT / SCAN_LINES][col][2];
                 uint8_t rgb_bit_slice = 0;
                 rgb_bit_slice |= (((r1 >> (7 - depth)) & 0x01)) << 0;
                 rgb_bit_slice |= (((g1 >> (7 - depth)) & 0x01)) << 1;
@@ -85,7 +88,7 @@ void prep_bitplanes() {
                 rgb_bit_slice |= (((r2 >> (7 - depth)) & 0x01)) << 3;
                 rgb_bit_slice |= (((g2 >> (7 - depth)) & 0x01)) << 4;
                 rgb_bit_slice |= (((b2 >> (7 - depth)) & 0x01)) << 5;
-                bitplane_buf[row][col][depth] = rgb_bit_slice;
+                (*bitplane_buf_in_ptr)[row][col][depth] = rgb_bit_slice;
             }
         }
     }
@@ -114,7 +117,7 @@ void init_gpio() {
 void refresh_task(void *param) {
     while (1) {
         if (*in_done_ptr) {
-            swap_frame_buffers();
+            swap_frames();
             *in_done_ptr = 0;
         }
         // Main render
@@ -127,12 +130,12 @@ void refresh_task(void *param) {
                 gpio_set_level(D, ((row - 1) >> 3) & 0x01);
                 gpio_set_level(OE, 0);
                 for (uint8_t col = 0; col < (uint8_t) (DISPLAY_WIDTH); col ++) {
-                    gpio_set_level(R1, (bitplane_buf[row][col][depth] >> 0) & 0x01);
-                    gpio_set_level(G1, (bitplane_buf[row][col][depth] >> 1) & 0x01);
-                    gpio_set_level(B1, (bitplane_buf[row][col][depth] >> 2) & 0x01);
-                    gpio_set_level(R2, (bitplane_buf[row][col][depth] >> 3) & 0x01);
-                    gpio_set_level(G2, (bitplane_buf[row][col][depth] >> 4) & 0x01);
-                    gpio_set_level(B2, (bitplane_buf[row][col][depth] >> 5) & 0x01);
+                    gpio_set_level(R1, ((*bitplane_buf_out_ptr)[row][col][depth] >> 0) & 0x01);
+                    gpio_set_level(G1, ((*bitplane_buf_out_ptr)[row][col][depth] >> 1) & 0x01);
+                    gpio_set_level(B1, ((*bitplane_buf_out_ptr)[row][col][depth] >> 2) & 0x01);
+                    gpio_set_level(R2, ((*bitplane_buf_out_ptr)[row][col][depth] >> 3) & 0x01);
+                    gpio_set_level(G2, ((*bitplane_buf_out_ptr)[row][col][depth] >> 4) & 0x01);
+                    gpio_set_level(B2, ((*bitplane_buf_out_ptr)[row][col][depth] >> 5) & 0x01);
                     gpio_set_level(CLK, 1);
                     gpio_set_level(CLK, 0);
                 }
@@ -150,8 +153,8 @@ void refresh_task(void *param) {
 // Call this to start the display refresh task
 void run_refresh() {
     init_gpio();
-
     
+    // Allocate frame buffers
     frame_buf_in = malloc(DISPLAY_HEIGHT * sizeof(uint8_t**));
     frame_buf_out = malloc(DISPLAY_HEIGHT * sizeof(uint8_t**));
     for (int y = 0; y < DISPLAY_HEIGHT; y ++) {
@@ -163,6 +166,7 @@ void run_refresh() {
         }
     }
 
+    // Zero frame buffers
     for (int y = 0; y < DISPLAY_HEIGHT; y ++) {
         for (int x = 0; x < DISPLAY_WIDTH; x ++) {
             frame_buf_in[y][x][0] = 0;
@@ -171,6 +175,18 @@ void run_refresh() {
             frame_buf_out[y][x][0] = 0;
             frame_buf_out[y][x][1] = 0;
             frame_buf_out[y][x][2] = 0;
+        }
+    }
+
+    // Allocate bitplanes
+    bitplane_buf_in = malloc(DISPLAY_HEIGHT * sizeof(uint8_t**));
+    bitplane_buf_out = malloc(DISPLAY_HEIGHT * sizeof(uint8_t**));
+    for (int y = 0; y < DISPLAY_HEIGHT; y ++) {
+        bitplane_buf_in[y] = malloc(DISPLAY_WIDTH * sizeof(uint8_t*));
+        bitplane_buf_out[y] = malloc(DISPLAY_WIDTH * sizeof(uint8_t*));
+        for (int x = 0; x < DISPLAY_WIDTH; x ++) {
+            bitplane_buf_in[y][x] = malloc(COLOR_DEPTH * sizeof(uint8_t));
+            bitplane_buf_out[y][x] = malloc(COLOR_DEPTH * sizeof(uint8_t));
         }
     }
 
