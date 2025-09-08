@@ -2,6 +2,7 @@
 esp-idf/
 build/
 sdkconfig*
+dependencies.lock
 
 # Python venv
 env-matrixclock/

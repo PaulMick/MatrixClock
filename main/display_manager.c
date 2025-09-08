@@ -5,20 +5,37 @@
 
 #include "display_driver.h"
 #include "display_utils.h"
+#include "assets.h"
 
-DisplayHandle displayHandle;
+DisplayHandle display_handle;
 
-void display_init() {
+int x = 0;
+int y = 0;
+
+void display_init(int loading_screen) {
     printf("Initializing Display\n");
 
-    displayHandle = get_display_handle();
-    int load_font_result = load_font();
+    display_handle = get_display_handle();
 
     run_refresh();
     printf("Display Initialization Complete\n");
 }
 
 void display_update() {
-    // printf("update ");
+    fill_display(display_handle.frame_buf_ptr, 0, 0, 0);
+    draw_pixel(display_handle.frame_buf_ptr, x, y, 255, 255, 255);
+    x ++;
+    if (x >= DISPLAY_WIDTH) {
+        x = 0;
+        y ++;
+    }
+    if (y >= DISPLAY_HEIGHT) {
+        y = 0;
+    }
+    draw_str(display_handle.frame_buf_ptr, "Hello World!", FONT_5x5_FLEX, 2, 2, 1, 255, 255, 255);
+    draw_rect(display_handle.frame_buf_ptr, 0, 0, 45, 9, 1, 255, 255, 255);
+
+    prep_bitplanes();
+    *(display_handle.in_done_ptr) = 1;
     vTaskDelay(10 / portTICK_PERIOD_MS);
 }

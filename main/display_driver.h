@@ -7,13 +7,15 @@
 #define DISPLAY_WIDTH 64
 
 typedef struct {
-    uint8_t (*frame_buf_ptr)[DISPLAY_HEIGHT][DISPLAY_WIDTH][3];
+    uint8_t ****frame_buf_ptr;
     int width;
     int height;
     int *in_done_ptr;
 } DisplayHandle;
 
 DisplayHandle get_display_handle();
+
+void prep_bitplanes();
 
 void run_refresh();
 
