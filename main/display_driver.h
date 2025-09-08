@@ -15,6 +15,8 @@ typedef struct {
 
 DisplayHandle get_display_handle();
 
+void prep_bitplanes();
+
 void run_refresh();
 
 #endif

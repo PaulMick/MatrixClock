@@ -35,6 +35,7 @@ void display_update() {
     draw_str(display_handle.frame_buf_ptr, "Hello World!", FONT_5x5_FLEX, 2, 2, 1, 255, 255, 255);
     draw_rect(display_handle.frame_buf_ptr, 0, 0, 45, 9, 1, 255, 255, 255);
 
+    prep_bitplanes();
     *(display_handle.in_done_ptr) = 1;
     vTaskDelay(50 / portTICK_PERIOD_MS);
 }

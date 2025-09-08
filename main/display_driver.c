@@ -112,12 +112,10 @@ void init_gpio() {
 }
 
 void refresh_task(void *param) {
-    prep_bitplanes();
     while (1) {
         if (*in_done_ptr) {
             swap_frame_buffers();
             *in_done_ptr = 0;
-            prep_bitplanes();
         }
         // Main render
         gpio_set_level(OE, 0);
