@@ -196,5 +196,15 @@ void run_refresh() {
         }
     }
 
+    // Zero bitplanes
+    for (int y = 0; y < DISPLAY_HEIGHT; y ++) {
+        for (int x = 0; x < DISPLAY_WIDTH; x ++) {
+            for (int d = 0; d < COLOR_DEPTH; d ++) {
+                bitplane_buf_in[y][x][d] = 0;
+                bitplane_buf_out[y][x][d] = 0;
+            }
+        }
+    }
+
     xTaskCreatePinnedToCore(display_task, "Display Task", 8192, xTaskGetCurrentTaskHandle(), 10, NULL, 1);
 }

@@ -28,5 +28,5 @@ void display_update() {
     // End Main Display
     prep_bitplanes();
     *(display_handle.in_done_ptr) = 1;
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelay(10 / portTICK_PERIOD_MS); // Do not remove
 }
