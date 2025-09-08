@@ -30,6 +30,8 @@ void display_update() {
         y = -5;
     }
 
+    draw_img(display_handle.frame_buf_ptr, IMG_WIFI_CONNECTED, 32, 0);
+
     // End Main Display
     prep_bitplanes();
     *(display_handle.in_done_ptr) = 1;

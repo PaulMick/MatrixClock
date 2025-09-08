@@ -104,6 +104,24 @@ void fill_display(uint8_t ****frame_buf_ptr, uint8_t r, uint8_t g, uint8_t b) {
     }
 }
 
+// Draw image from the included assets
+void draw_img(uint8_t ****frame_buf_ptr, image_t img, int x, int y) {
+    switch (img) {
+        case IMG_WIFI_CONNECTED:
+            draw_img_raw(frame_buf_ptr, WIFI_CONNECTED_IMG, x, y, WIFI_CONNECTED_WIDTH, WIFI_CONNECTED_HEIGHT); // Causing issues
+            break;
+    }
+}
+
+// Draw image directly
+void draw_img_raw(uint8_t ****frame_buf_ptr, uint8_t ***img_data, int x, int y, int width, int height) {
+    for (int i = 0; i < DISPLAY_WIDTH; i ++) {
+        for (int j = 0; j < DISPLAY_HEIGHT; j ++) {
+            draw_pixel(frame_buf_ptr, x + i, y + j, img_data[j][i][0], img_data[j][i][1], img_data[j][i][2]);
+        }
+    }
+}
+
 // TODO functions:
 // draw bmp img (bmp, x, y)
 // draw animation frame (animation bmps, time, x, y) -> done?: int (yes/no)
