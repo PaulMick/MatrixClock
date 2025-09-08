@@ -14,9 +14,9 @@ next_text = button_font.render("Next", True, (255, 255, 255))
 back_text = button_font.render("Back", True, (255, 255, 255))
 
 grid = [
-    [1, 1, 1, 1, 1],
     [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 1],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0]
 ]
@@ -30,44 +30,44 @@ spacing_overrides = {
     32: 3 # [SPACE]
 }
 
-font_name = "misc"
+font_name = "font_5x5_flex"
 
 # Pack each character bitmap into 4 bytes and write it to the file
-def write_font(grids: list[list[list[int]]], fname: str) -> None:
-    with open(f"misc_python/font_output/{font_name}.font", "wb") as f:
-        for a in range(len(grids)):
-            n = 0x00000000
-            for bit in range(25):
-                i = int(bit / 5)
-                j = bit - i * 5
-                n |= grids[a][i][j] << bit
-            # Automatically determine width
+def print_font(grids: list[list[list[int]]], fname: str) -> None:
+    print(f"static uint32_t {font_name}[128] = {'{'}")
+    for a in range(len(grids)):
+        n = 0x00000000
+        for bit in range(25):
+            i = int(bit / 5)
+            j = bit - i * 5
+            n |= grids[a][i][j] << bit
+        # Automatically determine width
+        width = 0
+        if n == 0:
             width = 0
-            if n == 0:
-                width = 0
-            elif n < 0x20:
-                width = 1
-            elif n < 0x400:
-                width = 2
-            elif n < 0x8000:
-                width = 3
-            elif n < 0x100000:
-                width = 4
-            else:
-                width = 5
-            # If there is an override for this character, do it
-            if a in spacing_overrides:
-                width = spacing_overrides[a]
-            n |= width << 25
-            b = n.to_bytes(4, "big")
-            print(f"{a}: {hex(n)}")
-            f.write(b)
+        elif n < 0x20:
+            width = 1
+        elif n < 0x400:
+            width = 2
+        elif n < 0x8000:
+            width = 3
+        elif n < 0x100000:
+            width = 4
+        else:
+            width = 5
+        # If there is an override for this character, do it
+        if a in spacing_overrides:
+            width = spacing_overrides[a]
+        n |= width << 25
+        b = n.to_bytes(4, "big")
+        print(f"    {n:#0{10}x},")
+    print("};")
 
 running = True
 while running:
     # When the last character is confirmed, pack and write to file
     if len(grids) >= 128:
-        write_font(grids, "3x5.font")
+        print_font(grids, "3x5.font")
         exit(0)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
