@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 
 width = 5
-height = 7
+height = 6
 frames = 6
 
 fname = "wifi_connecting"
@@ -21,8 +21,8 @@ for f in range(frames):
         print("        {", end = "")
         for x in range(width):
             r = int(np_im[x, y, 0])
-            g = int(np_im[x, y, 0])
-            b = int(np_im[x, y, 0])
+            g = int(np_im[x, y, 1])
+            b = int(np_im[x, y, 2])
             print(f"{'{'}{r:#0{2}x}, {g:#0{2}x}, {b:#0{2}x}{'}'}, ", end = "")
         print("},")
     print("    },")

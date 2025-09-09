@@ -10,6 +10,6 @@ void draw_rect(uint8_t ****frame_buf_ptr, int x, int y, int width, int height, i
 void draw_line(uint8_t ****frame_buf_ptr, int x, int y, direction_t direction, int length, uint8_t r, uint8_t g, uint8_t b);
 void fill_display(uint8_t ****frame_buf_ptr, uint8_t r, uint8_t g, uint8_t b);
 void draw_img(uint8_t ****frame_buf_ptr, image_t img, int x, int y);
-void draw_img_raw(uint8_t ****frame_buf_ptr, uint8_t ***img_data, int x, int y, int width, int height);
+void draw_img_raw(uint8_t ****frame_buf_ptr, int x, int y, int width, int height, uint8_t img_data[height][width][3]);
 
 #endif
