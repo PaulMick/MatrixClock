@@ -8,14 +8,6 @@
 #define DISPLAY_WIDTH 64
 #define DISPLAY_HEIGHT 32
 
-const char *months_full[12] = {"JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"};
-const char *months_short[12] = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
-
-const char *week_days_full[7] = {"MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"};
-const char *week_days_short[7] = {"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"};
-
-
-
 // Safe function for drawing a single pixel, checks if pixel coordinates are on the display before writing
 void draw_pixel(uint8_t ****frame_buf_ptr, int x, int y, uint8_t r, uint8_t g, uint8_t b) {
     if (x >= 0 && x < DISPLAY_WIDTH && y >= 0 && y < DISPLAY_HEIGHT) {
@@ -101,6 +93,26 @@ void fill_display(uint8_t ****frame_buf_ptr, uint8_t r, uint8_t g, uint8_t b) {
             (*frame_buf_ptr)[j][i][1] = g;
             (*frame_buf_ptr)[j][i][2] = b;
         }
+    }
+}
+
+// Draw image directly
+void draw_img_raw(uint8_t ****frame_buf_ptr, int x, int y, int width, int height, uint8_t img_data[height][width][3]) {
+    for (int i = 0; i < width; i ++) {
+        for (int j = 0; j < height; j ++) {
+            if (img_data[j][i][0] != TRANSPARENT_COLOR[0] && img_data[j][i][1] != TRANSPARENT_COLOR[1] && img_data[j][i][2] != TRANSPARENT_COLOR[2]) {
+                draw_pixel(frame_buf_ptr, x + i, y + j, img_data[j][i][0], img_data[j][i][1], img_data[j][i][2]);
+            }
+        }
+    }
+}
+
+// Draw image from the included assets
+void draw_img(uint8_t ****frame_buf_ptr, image_t img, int x, int y) {
+    switch (img) {
+        case IMG_WIFI_CONNECTED:
+            draw_img_raw(frame_buf_ptr, x, y, WIFI_CONNECTED_WIDTH, WIFI_CONNECTED_HEIGHT, WIFI_CONNECTED_IMG);
+            break;
     }
 }
 

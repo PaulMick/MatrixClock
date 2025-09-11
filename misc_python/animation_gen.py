@@ -1,26 +1,29 @@
 import numpy as np
 import cv2
 
-# width and height of the animation
-WIDTH = 7
-HEIGHT = 5
+width = 5
+height = 6
+frames = 6
 
-folder_name = input("Animation folder name: ")
-num_frames = int(input("Number of frames: "))
-fps = int(input("Frames per second: "))
+fname = "wifi_connecting"
+cname = "WIFI_CONNECTING"
 
-with open(f"misc_python/image_output/{folder_name}.bmpani", "wb") as f:
-    f.write(WIDTH.to_bytes(1, "big"))
-    f.write(HEIGHT.to_bytes(1, "big"))
-    f.write(num_frames.to_bytes(1, "big"))
-    f.write(fps.to_bytes(1, "big"))
-    for n in range(num_frames):
-        cv_im = cv2.imread(f"misc_python/image_input/{folder_name}/{n}.png")
-        np_im = np.asarray(cv_im)
-        for i in range(WIDTH):
-            for j in range(HEIGHT):
-                f.write(int(np_im[j, i, 0]).to_bytes(1, "big"))
-                f.write(int(np_im[j, i, 1]).to_bytes(1, "big"))
-                f.write(int(np_im[j, i, 2]).to_bytes(1, "big"))
+print(f"static int {cname}_WIDTH = {width};")
+print(f"static int {cname}_HEIGHT = {height};")
+print(f"static int {cname}_FRAMES = {frames};")
+print(f"static uint8_t {cname}_IMG[{frames}][{height}][{width}][3] = {'{'}")
+for f in range(frames):
+    cv_im = cv2.imread(f"misc_python/image_input/{fname}/{f}.png")
+    np_im = np.asarray(cv_im)
 
-print(f"Animation \"{folder_name}.bmpani\" successfully generated")
+    print("    {")
+    for y in range(height):
+        print("        {", end = "")
+        for x in range(width):
+            r = int(np_im[x, y, 0])
+            g = int(np_im[x, y, 1])
+            b = int(np_im[x, y, 2])
+            print(f"{'{'}{r:#0{2}x}, {g:#0{2}x}, {b:#0{2}x}{'}'}, ", end = "")
+        print("},")
+    print("    },")
+print("};")

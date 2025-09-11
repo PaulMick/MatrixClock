@@ -33,18 +33,21 @@
 
 #define BASE_DELAY_US 1
 
+// Double frame buffer with pointers for swapping
 uint8_t ***frame_buf_in;
 uint8_t ***frame_buf_out;
 uint8_t ****frame_buf_in_ptr = &frame_buf_in;
 uint8_t ****frame_buf_out_ptr = &frame_buf_out;
 uint8_t ***frame_buf_tmp;
 
+// Double bitplane buffer with pointers for swapping
 uint8_t ***bitplane_buf_in;
 uint8_t ***bitplane_buf_out;
 uint8_t ****bitplane_buf_in_ptr = &bitplane_buf_in;
 uint8_t ****bitplane_buf_out_ptr = &bitplane_buf_out;
 uint8_t ***bitplane_tmp;
 
+// To indicate to display task when a new frame is ready
 int in_done = 0;
 int *in_done_ptr = &in_done;
 
@@ -59,6 +62,7 @@ DisplayHandle get_display_handle() {
     return display_handle;
 }
 
+// Swap the frame buffers and bitplane buffers
 void swap_frames() {
     // Swap frame buffers
     frame_buf_tmp = frame_buf_in;
@@ -70,7 +74,7 @@ void swap_frames() {
     bitplane_buf_out = bitplane_tmp;
 }
 
-// Prepare bitplanes for a pair of rows
+// Prepare bitplane for new frame, called externally to not interrupt display task
 void prep_bitplanes() {
     for (uint8_t row = 0; row < (uint8_t) (DISPLAY_HEIGHT / SCAN_LINES); row ++) {
         for (int col = 0; col < DISPLAY_WIDTH; col ++) {
@@ -94,6 +98,7 @@ void prep_bitplanes() {
     }
 }
 
+// Setup gpio config
 void init_gpio() {
     gpio_config_t gpio_cfg = {
         .pin_bit_mask = ((1ULL << R1) | (1ULL << G1) | (1ULL << B1) | (1ULL << R2) | (1ULL << G2) | (1ULL << B2) | (1ULL << A) | (1ULL << B) | (1ULL << C) | (1ULL << D) | (1ULL << LAT) | (1ULL << OE) | (1ULL << CLK)),
@@ -114,7 +119,8 @@ void init_gpio() {
     gpio_set_level(B2, 0);
 }
 
-void refresh_task(void *param) {
+// Main display task, continuously drives the display
+void display_task(void *param) {
     while (1) {
         if (*in_done_ptr) {
             swap_frames();
@@ -150,7 +156,7 @@ void refresh_task(void *param) {
     }
 }
 
-// Call this to start the display refresh task
+// Call this to start the display task
 void run_refresh() {
     init_gpio();
     
@@ -190,5 +196,15 @@ void run_refresh() {
         }
     }
 
-    xTaskCreatePinnedToCore(refresh_task, "Refresh Task", 8192, xTaskGetCurrentTaskHandle(), 10, NULL, 1);
+    // Zero bitplanes
+    for (int y = 0; y < DISPLAY_HEIGHT; y ++) {
+        for (int x = 0; x < DISPLAY_WIDTH; x ++) {
+            for (int d = 0; d < COLOR_DEPTH; d ++) {
+                bitplane_buf_in[y][x][d] = 0;
+                bitplane_buf_out[y][x][d] = 0;
+            }
+        }
+    }
+
+    xTaskCreatePinnedToCore(display_task, "Display Task", 8192, xTaskGetCurrentTaskHandle(), 10, NULL, 1);
 }

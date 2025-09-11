@@ -1,21 +1,24 @@
 import numpy as np
 import cv2
 
-# width and height of the image
-WIDTH = 7
-HEIGHT = 5
+width = 5
+height = 6
 
-fname = input("Image name (exclude .png extension): ")
+fname = "wifi_connected"
+cname = "WIFI_CONNECTED"
+
 cv_im = cv2.imread(f"misc_python/image_input/{fname}.png")
 np_im = np.asarray(cv_im)
 
-with open(f"misc_python/image_output/{fname}.bmpimg", "wb") as f:
-    f.write(WIDTH.to_bytes(1, "big"))
-    f.write(HEIGHT.to_bytes(1, "big"))
-    for i in range(WIDTH):
-        for j in range(HEIGHT):
-            f.write(int(np_im[j, i, 0]).to_bytes(1, "big"))
-            f.write(int(np_im[j, i, 1]).to_bytes(1, "big"))
-            f.write(int(np_im[j, i, 2]).to_bytes(1, "big"))
-
-print(f"Image \"{fname}.bmpimg\" successfully generated")
+print(f"static int {cname}_WIDTH = {width};")
+print(f"static int {cname}_HEIGHT = {height};")
+print(f"static uint8_t {cname}_IMG[{height}][{width}][3] = {'{'}")
+for y in range(height):
+    print("    {", end = "")
+    for x in range(width):
+        r = int(np_im[y * 2, x * 2, 0])
+        g = int(np_im[y * 2, x * 2, 1])
+        b = int(np_im[y * 2, x * 2, 2])
+        print(f"{'{'}{r:#0{2}x}, {g:#0{2}x}, {b:#0{2}x}{'}'}, ", end = "")
+    print("},")
+print("};")
