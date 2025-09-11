@@ -100,7 +100,9 @@ void fill_display(uint8_t ****frame_buf_ptr, uint8_t r, uint8_t g, uint8_t b) {
 void draw_img_raw(uint8_t ****frame_buf_ptr, int x, int y, int width, int height, uint8_t img_data[height][width][3]) {
     for (int i = 0; i < width; i ++) {
         for (int j = 0; j < height; j ++) {
-            draw_pixel(frame_buf_ptr, x + i, y + j, img_data[j][i][0], img_data[j][i][1], img_data[j][i][2]);
+            if (img_data[j][i][0] != TRANSPARENT_COLOR[0] && img_data[j][i][1] != TRANSPARENT_COLOR[1] && img_data[j][i][2] != TRANSPARENT_COLOR[2]) {
+                draw_pixel(frame_buf_ptr, x + i, y + j, img_data[j][i][0], img_data[j][i][1], img_data[j][i][2]);
+            }
         }
     }
 }
