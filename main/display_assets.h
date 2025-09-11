@@ -1,5 +1,5 @@
-#ifndef ASSETS_H
-#define ASSETS_H
+#ifndef DISPLAY_ASSETS_H
+#define DISPLAY_ASSETS_H
 
 #include <stdint.h>
 

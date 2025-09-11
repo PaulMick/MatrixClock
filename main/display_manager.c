@@ -5,7 +5,7 @@
 
 #include "display_driver.h"
 #include "display_utils.h"
-#include "assets.h"
+#include "display_assets.h"
 
 DisplayHandle display_handle;
 

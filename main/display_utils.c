@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "assets.h"
+#include "display_assets.h"
 
 #define DISPLAY_WIDTH 64
 #define DISPLAY_HEIGHT 32
