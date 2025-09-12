@@ -1,8 +1,6 @@
 #ifndef MODES_ASSETS_H
 #define MODES_ASSETS_H
 
-#include "display_assets.h"
-
 typedef struct {
     int year;
     int month;

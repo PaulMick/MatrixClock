@@ -16,9 +16,9 @@ print(f"static uint8_t {cname}_IMG[{height}][{width}][3] = {'{'}")
 for y in range(height):
     print("    {", end = "")
     for x in range(width):
-        r = int(np_im[y * 2, x * 2, 0])
-        g = int(np_im[y * 2, x * 2, 1])
-        b = int(np_im[y * 2, x * 2, 2])
+        r = int(np_im[y, x, 0])
+        g = int(np_im[y, x, 1])
+        b = int(np_im[y, x, 2])
         print(f"{'{'}{r:#0{2}x}, {g:#0{2}x}, {b:#0{2}x}{'}'}, ", end = "")
     print("},")
 print("};")
