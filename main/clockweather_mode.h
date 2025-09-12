@@ -1,0 +1,6 @@
+#ifndef CLOCKWEATHER_MODE_H
+#define CLOCKWEATHER_MODE_H
+
+
+
+#endif
