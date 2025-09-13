@@ -1,13 +1,13 @@
 #ifndef MODES_ASSETS_H
 #define MODES_ASSETS_H
 
-enum {
+enum current_mode {
     MODE_MENU,
     MODE_CLOCK,
     MODE_CLOCKWEATHER,
     MODE_WEATHER,
-} mode;
-typedef enum mode mode_t;
+};
+typedef enum current_mode current_mode_t;
 
 typedef struct {
     int selection;
@@ -43,5 +43,12 @@ typedef struct {
     int sunset_hour;
     int sunset_minute;
 } modestate_weather_t;
+
+typedef struct {
+    modestate_menu_t menu;
+    modestate_clock_t clock;
+    modestate_clockweather_t clockweather;
+    modestate_weather_t weather;
+} modestates_t;
 
 #endif

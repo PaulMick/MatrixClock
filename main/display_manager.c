@@ -6,6 +6,7 @@
 #include "display_driver.h"
 #include "display_utils.h"
 #include "display_assets.h"
+#include "modes_assets.h"
 
 DisplayHandle display_handle;
 
@@ -20,7 +21,7 @@ void display_init(int loading_screen) {
     printf("Display Initialization Complete\n");
 }
 
-void display_update() {
+void display_update(modestates_t mode_states, current_mode_t mode) {
     fill_display(display_handle.frame_buf_ptr, 0, 0, 0);
     // Main Display
 

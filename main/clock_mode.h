@@ -3,4 +3,6 @@
 
 #include "modes_assets.h"
 
+modestate_clock_t get_clock_state();
+
 #endif
