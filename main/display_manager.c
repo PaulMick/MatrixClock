@@ -10,8 +10,6 @@
 
 DisplayHandle display_handle;
 
-int y = -5;
-
 void display_init(int loading_screen) {
     printf("Initializing Display\n");
 
@@ -25,17 +23,20 @@ void display_update(modestates_t mode_states, current_mode_t mode) {
     fill_display(display_handle.frame_buf_ptr, 0, 0, 0);
     // Main Display
 
-    draw_rect(display_handle.frame_buf_ptr, 0, 0, 40, 20, -1, 0, 255, 0);
-
-    draw_str(display_handle.frame_buf_ptr, "HELLO", FONT_5x5_FLEX, 0, y, 1, 255, 0, 255);
-    y ++;
-    if (y > 32) {
-        y = -5;
+    switch (mode) {
+        case MODE_MENU:
+            draw_menu(display_handle.frame_buf_ptr, mode_states.menu);
+            break;
+        case MODE_CLOCK:
+            draw_clock(display_handle.frame_buf_ptr, mode_states.clock);
+            break;
+        case MODE_CLOCKWEATHER:
+            draw_clockweather(display_handle.frame_buf_ptr, mode_states.clockweather);
+            break;
+        case MODE_WEATHER:
+            draw_weather(display_handle.frame_buf_ptr, mode_states.weather);
+            break;
     }
-
-    draw_img(display_handle.frame_buf_ptr, IMG_WIFI_CONNECTED, 32, 0);
-
-    
 
     // End Main Display
     prep_bitplanes();

@@ -1,11 +1,11 @@
 import numpy as np
 import cv2
 
-width = 5
-height = 6
+width = 13
+height = 10
 
-fname = "wifi_connected"
-cname = "WIFI_CONNECTED"
+fname = "pm"
+cname = "PM"
 
 cv_im = cv2.imread(f"misc_python/image_input/{fname}.png")
 np_im = np.asarray(cv_im)

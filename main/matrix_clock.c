@@ -13,7 +13,7 @@
 void matrix_clock_run() {
     display_init(0);
 
-    current_mode_t mode = MODE_CLOCK;
+    current_mode_t mode = MODE_CLOCKWEATHER;
 
     modestates_t mode_states = {
         .menu = {

@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "display_assets.h"
+#include "modes_assets.h"
 
 #define DISPLAY_WIDTH 64
 #define DISPLAY_HEIGHT 32
@@ -113,9 +114,116 @@ void draw_img(uint8_t ****frame_buf_ptr, image_t img, int x, int y) {
         case IMG_WIFI_CONNECTED:
             draw_img_raw(frame_buf_ptr, x, y, WIFI_CONNECTED_WIDTH, WIFI_CONNECTED_HEIGHT, WIFI_CONNECTED_IMG);
             break;
+        case IMG_AM:
+            draw_img_raw(frame_buf_ptr, x, y, AM_WIDTH, AM_HEIGHT, AM_IMG);
+            break;
+        case IMG_PM:
+            draw_img_raw(frame_buf_ptr, x, y, PM_WIDTH, PM_HEIGHT, PM_IMG);
+            break;
     }
 }
 
+// Draw menu mode
+void draw_menu(uint8_t ****frame_buf_ptr, modestate_menu_t state) {
+
+}
+
+// Draw clock mode
+void draw_clock(uint8_t ****frame_buf_ptr, modestate_clock_t state) {
+    
+
+}
+
+// Draw clockweather mode
+void draw_clockweather(uint8_t ****frame_buf_ptr, modestate_clockweather_t state) {
+    // Clear background
+    fill_display(frame_buf_ptr, 0, 0, 0);
+
+    // Date
+    draw_str(frame_buf_ptr, WEEK_DAYS_SHORT[state.week_day], FONT_5x5_FLEX, 1, 1, 1, 255, 255, 255);
+    char date_str[6];
+    sprintf(date_str, "%02d/%02d", state.month, state.month_day);
+    draw_str(frame_buf_ptr, date_str, FONT_5x5_FLEX, 16, 1, 1, 255, 255, 255);
+
+    // Temperature
+    char temp_str[6];
+    sprintf(temp_str, "%03d*F", state.temp_f);
+    if (state.temp_f >= TEMP_HIGH_THRESHOLD_F) {
+        draw_str(frame_buf_ptr, temp_str, FONT_5x5_FLEX, 36, 1, 1, 255, 100, 100);
+    } else if (state.temp_f <= TEMP_LOW_THRESHOLD_F) {
+        draw_str(frame_buf_ptr, temp_str, FONT_5x5_FLEX, 36, 1, 1, 100, 100, 255);
+    } else {
+        draw_str(frame_buf_ptr, temp_str, FONT_5x5_FLEX, 36, 1, 1, 255, 255, 255);
+    }
+
+    // Weather Code
+
+    // High and low temps
+    char high_str[4];
+    char low_str[4];
+    sprintf(high_str, "%03d", state.temp_high_f);
+    sprintf(low_str, "%03d", state.temp_low_f);
+    draw_str(frame_buf_ptr, high_str, FONT_5x5_FLEX, 52, 7, 1, 255, 255, 255);
+    draw_str(frame_buf_ptr, low_str, FONT_5x5_FLEX, 52, 13, 1, 255, 255, 255);
+    draw_line(frame_buf_ptr, 49, 7, DIRECTION_DOWN, 5, 255, 100, 100);
+    draw_line(frame_buf_ptr, 48, 8, DIRECTION_RIGHT, 3, 255, 100, 100);
+    draw_line(frame_buf_ptr, 49, 13, DIRECTION_DOWN, 5, 100, 100, 255);
+    draw_line(frame_buf_ptr, 48, 16, DIRECTION_RIGHT, 3, 100, 100, 255);
+
+    // AM/PM
+    printf("hour %d\n", state.hour);
+    if (state.hour >= 12) {
+        draw_img(frame_buf_ptr, IMG_PM, 49, 20);
+    } else {
+        draw_img(frame_buf_ptr, IMG_AM, 49, 20);
+    }
+
+    // Time
+    draw_rect(frame_buf_ptr, 19, 13, 3, 3, -1, 255, 255, 255);
+    draw_rect(frame_buf_ptr, 19, 22, 3, 3, -1, 255, 255, 255);
+    int hour = state.hour % 12;
+    if (hour == 0) {
+        hour = 12;
+    }
+    if (hour >= 10) {
+        draw_rect(frame_buf_ptr, 2, 8, 3, 22, -1, 255, 255, 255);
+    }
+    int hour_right = hour % 10;
+    switch (hour_right) {
+        case 0:
+            draw_rect(frame_buf_ptr, 7, 8, 10, 22, 3, 255, 255, 255);
+            break;
+        case 1:
+            draw_rect(frame_buf_ptr, 14, 8, 3, 22, -1, 255, 255, 255);
+            break;
+        case 2:
+            draw_rect(frame_buf_ptr, 7, 8, 10, 3, -1, 255, 255, 255);
+            draw_rect(frame_buf_ptr, 14, 8, 3, 12, -1, 255, 255, 255);
+            draw_rect(frame_buf_ptr, 7, 17, 10, 3, -1, 255, 255, 255);
+            draw_rect(frame_buf_ptr, 7, 17, 3, 13, -1, 255, 255, 255);
+            draw_rect(frame_buf_ptr, 7, 27, 10, 3, -1, 255, 255, 255);
+            break;
+        case 3:
+            break;
+        case 4:
+            break;
+        case 5:
+            break;
+        case 6:
+            break;
+        case 7:
+            break;
+        case 8:
+            break;
+        case 9:
+            break;
+    }
+}
+
+// Draw weather mode
+void draw_weather(uint8_t ****frame_buf_ptr, modestate_weather_t state) {
+
+}
+
 // TODO functions:
-// draw bmp img (bmp, x, y)
 // draw animation frame (animation bmps, time, x, y) -> done?: int (yes/no)
