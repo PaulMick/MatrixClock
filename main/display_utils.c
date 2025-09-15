@@ -123,6 +123,64 @@ void draw_img(uint8_t ****frame_buf_ptr, image_t img, int x, int y) {
     }
 }
 
+// Draw a large single digit, used in clock and clockweather
+void draw_large_digit(uint8_t ****frame_buf_ptr, int n, int x, int y, uint8_t r, uint8_t g, uint8_t b) {
+    switch (n) {
+        case 0:
+            draw_rect(frame_buf_ptr, x, y, 10, 22, 3, r, g, b);
+            break;
+        case 1:
+            draw_rect(frame_buf_ptr, x + 7, y, 3, 22, -1, r, g, b);
+            break;
+        case 2:
+            draw_rect(frame_buf_ptr, x, y, 10, 3, -1, r, g, b);
+            draw_rect(frame_buf_ptr, x + 7, y + 3, 3, 9, -1, r, g, b);
+            draw_rect(frame_buf_ptr, x, y + 9, 7, 3, -1, r, g, b);
+            draw_rect(frame_buf_ptr, x, y + 12, 3, 10, -1, r, g, b);
+            draw_rect(frame_buf_ptr, x + 3, y + 19, 7, 3, -1, r, g, b);
+            break;
+        case 3:
+            draw_rect(frame_buf_ptr, x + 7, y, 3, 22, -1, r, g, b);
+            draw_rect(frame_buf_ptr, x, y, 7, 3, -1, r, g, b);
+            draw_rect(frame_buf_ptr, x, y + 9, 7, 3, -1, r, g, b);
+            draw_rect(frame_buf_ptr, x, y + 19, 7, 3, -1, r, g, b);
+            break;
+        case 4:
+            draw_rect(frame_buf_ptr, x + 7, y, 3, 22, -1, r, g, b);
+            draw_rect(frame_buf_ptr, x, y, 3, 12, -1, r, g, b);
+            draw_rect(frame_buf_ptr, x + 3, y + 9, 4, 3, -1, r, g, b);
+            break;
+        case 5:
+            draw_rect(frame_buf_ptr, x, y, 10, 3, -1, r, g, b);
+            draw_rect(frame_buf_ptr, x, y + 3, 3, 6, -1, r, g, b);
+            draw_rect(frame_buf_ptr, x, y + 9, 10, 3, -1, r, g, b);
+            draw_rect(frame_buf_ptr, x + 7, y + 12, 3, 7, -1, r, g, b);
+            draw_rect(frame_buf_ptr, x, y + 19, 10, 3, -1, r, g, b);
+            break;
+        case 6:
+            draw_rect(frame_buf_ptr, x, y, 10, 3, -1, r, g, b);
+            draw_rect(frame_buf_ptr, x, y + 3, 3, 19, -1, r, g, b);
+            draw_rect(frame_buf_ptr, x + 3, y + 9, 7, 3, -1, r, g, b);
+            draw_rect(frame_buf_ptr, x + 3, y + 19, 7, 3, -1, r, g, b);
+            draw_rect(frame_buf_ptr, x + 7, y + 12, 3, 7, -1, r, g, b);
+            break;
+        case 7:
+            draw_rect(frame_buf_ptr, x, y, 10, 3, -1, r, g, b);
+            draw_rect(frame_buf_ptr, x + 7, y + 3, 3, 19, -1, r, g, b);
+            break;
+        case 8:
+            draw_rect(frame_buf_ptr, x, y, 10, 22, 3, r, g, b);
+            draw_rect(frame_buf_ptr, x + 3, y + 9, 4, 3, -1, r, g, b);
+            break;
+        case 9:
+            draw_rect(frame_buf_ptr, x, y, 10, 3, -1, r, g, b);
+            draw_rect(frame_buf_ptr, x + 7, y + 3, 3, 19, -1, r, g, b);
+            draw_rect(frame_buf_ptr, x, y + 9, 7, 3, -1, r, g, b);
+            draw_rect(frame_buf_ptr, x, y + 3, 3, 6, -1, r, g, b);
+            break;
+    }
+}
+
 // Draw menu mode
 void draw_menu(uint8_t ****frame_buf_ptr, modestate_menu_t state) {
 
@@ -171,7 +229,6 @@ void draw_clockweather(uint8_t ****frame_buf_ptr, modestate_clockweather_t state
     draw_line(frame_buf_ptr, 48, 16, DIRECTION_RIGHT, 3, 100, 100, 255);
 
     // AM/PM
-    printf("hour %d\n", state.hour);
     if (state.hour >= 12) {
         draw_img(frame_buf_ptr, IMG_PM, 49, 20);
     } else {
@@ -188,36 +245,9 @@ void draw_clockweather(uint8_t ****frame_buf_ptr, modestate_clockweather_t state
     if (hour >= 10) {
         draw_rect(frame_buf_ptr, 2, 8, 3, 22, -1, 255, 255, 255);
     }
-    int hour_right = hour % 10;
-    switch (hour_right) {
-        case 0:
-            draw_rect(frame_buf_ptr, 7, 8, 10, 22, 3, 255, 255, 255);
-            break;
-        case 1:
-            draw_rect(frame_buf_ptr, 14, 8, 3, 22, -1, 255, 255, 255);
-            break;
-        case 2:
-            draw_rect(frame_buf_ptr, 7, 8, 10, 3, -1, 255, 255, 255);
-            draw_rect(frame_buf_ptr, 14, 8, 3, 12, -1, 255, 255, 255);
-            draw_rect(frame_buf_ptr, 7, 17, 10, 3, -1, 255, 255, 255);
-            draw_rect(frame_buf_ptr, 7, 17, 3, 13, -1, 255, 255, 255);
-            draw_rect(frame_buf_ptr, 7, 27, 10, 3, -1, 255, 255, 255);
-            break;
-        case 3:
-            break;
-        case 4:
-            break;
-        case 5:
-            break;
-        case 6:
-            break;
-        case 7:
-            break;
-        case 8:
-            break;
-        case 9:
-            break;
-    }
+    draw_large_digit(frame_buf_ptr, hour % 10, 7, 8, 255, 255, 255);
+    draw_large_digit(frame_buf_ptr, state.minute / 10, 24, 8, 255, 255, 255);
+    draw_large_digit(frame_buf_ptr, state.minute % 10, 36, 8, 255, 255, 255);
 }
 
 // Draw weather mode

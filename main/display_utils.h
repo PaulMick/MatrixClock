@@ -12,6 +12,7 @@ void draw_line(uint8_t ****frame_buf_ptr, int x, int y, direction_t direction, i
 void fill_display(uint8_t ****frame_buf_ptr, uint8_t r, uint8_t g, uint8_t b);
 void draw_img(uint8_t ****frame_buf_ptr, image_t img, int x, int y);
 void draw_img_raw(uint8_t ****frame_buf_ptr, int x, int y, int width, int height, uint8_t img_data[height][width][3]);
+void draw_large_digit(uint8_t ****frame_buf_ptr, int n, int x, int y, uint8_t r, uint8_t g, uint8_t b);
 
 void draw_menu(uint8_t ****frame_buf_ptr, modestate_menu_t state);
 void draw_clock(uint8_t ****frame_buf_ptr, modestate_clock_t state);
